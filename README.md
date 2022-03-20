@@ -1,4 +1,4 @@
-*Doc in progress, code in progress, not yet ready to be used.*
+**Doc in progress, code in progress, not yet ready to be used.**
 
 
 # WioHeliumMonitor
@@ -15,6 +15,6 @@ The solution currently ping the miner over the LAN and ping Internet to make sur
 
 ## Requirements
 The project uses a WIO Terminal you need to make some specific stuffs:
-- Upgrade the WiFi firmware folowing the (Seeed documentation)[https://wiki.seeedstudio.com/Wio-Terminal-Network-Overview/]
+- Upgrade the WiFi firmware folowing the [Seeed documentation](https://wiki.seeedstudio.com/Wio-Terminal-Network-Overview/)
 - Modifiy the ping.c file in the libraries according to the ping.cpp content in this archive
 
