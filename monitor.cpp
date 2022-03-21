@@ -82,10 +82,19 @@ uint8_t getLastIndexWritten() {
 }
 
 
+// Hack the malloc wrapper to clear the memory leak
+// in the WiFi stack ...
+void erpcs_initMallocHisto();
+void erpc_cleanMalloc();
+
 void runMonitor() {
 
+    erpcs_initMallocHisto();
     uint32_t rttE = pingIP((char*)state.extPingIp);
+    erpc_cleanMalloc();
+    erpcs_initMallocHisto();
     uint32_t rttI = pingIP((char*)state.intPingIp);
+    erpc_cleanMalloc();
     addInBuffer(rttE,rttI);
 
 }

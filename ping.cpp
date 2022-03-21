@@ -43,7 +43,7 @@ static void ping_recv(int s) {
     uint32_t stop=start;
 
     // Send
-    while ((len = recvfrom(s, buf, sizeof(buf), 0, (struct sockaddr*)&from, (socklen_t*)&fromlen)) > 0 || (stop-start) < 1000 ) {
+    while ((len = recvfrom(s, buf, sizeof(buf), 0, (struct sockaddr*)&from, (socklen_t*)&fromlen)) > 0 || ((uint32_t)(stop-start)) < 1000 ) {
         stop=millis();
         if (len >= (int)(sizeof(struct ip_hdr) + sizeof(struct icmp_echo_hdr))) {
             // Register end time
@@ -90,9 +90,9 @@ static void ping_recv(int s) {
                 }
 
                 // Print ...
-                rpc_printf("%d bytes from %s: icmp_seq=%d time=%.3f ms\r\n", len, ipa,
-                     ntohs(iecho->seqno), elapsed
-                );
+                //rpc_printf("%d bytes from %s: icmp_seq=%d time=%.3f ms\r\n", len, ipa,
+                //     ntohs(iecho->seqno), elapsed
+                //);
 
                 //rpc_printf("%d code %d type %d seq_exp %d dur\r\n",ICMPH_CODE(iecho), ICMPH_TYPE(iecho), ping_seq_num, (stop-start));
                 return;
@@ -104,7 +104,7 @@ static void ping_recv(int s) {
              //   rpc_printf("receive len %X",len);            
         }
     }
-    stop=millis();
+    //stop=millis();
     //rpc_printf("### quitting after %d ms\r\n", (stop-start));  
 
     if (len < 0) {
@@ -113,3 +113,77 @@ static void ping_recv(int s) {
 }
 
  */
+
+/* 
+ *  Garbage collection in erpc_port_freertos
+ */
+
+ /*
+
+// -------------------------
+// Hack it
+//#include <Arduino.h>
+
+void * allocHisto[128];
+int ptr = 0;
+
+void erpcs_initMallocHisto() {
+  ptr = 0;
+}
+
+void erpc_addMalloc(void * m) {
+  if ( ptr == 128 ) return;
+  allocHisto[ptr] = m;
+  ptr++;
+}
+
+void erpc_delMalloc(void * m) {
+  for ( int i = 0 ; i < ptr ; i++ ) {
+    if ( allocHisto[i] == m ) {
+      allocHisto[i] = NULL;
+      break;
+    }
+  }
+}
+
+void erpc_cleanMalloc() {
+  int cleaned = 0;
+  for ( int i = 0 ; i < ptr ; i++ ) {
+    if ( allocHisto[i] != NULL ) {
+      cleaned++;
+      vPortFree(allocHisto[i]);
+    }
+  }
+  //Serial.printf("Cleaned %d\r\n",cleaned);
+  ptr = 0;
+}
+// ----
+
+void *erpc_malloc(size_t size)
+{
+    if(size == 0)
+    {
+        return NULL;
+    }
+    
+    void *p = pvPortMalloc(size);
+    // Hack it
+    if ( p != NULL ) {
+      erpc_addMalloc(p);
+    }
+    // ...
+    return p;
+}
+
+void erpc_free(void *ptr)
+{
+  // Hack ...
+  erpc_delMalloc(ptr);
+  // ...
+    vPortFree(ptr);
+}
+
+ 
+  */
+
+ 
