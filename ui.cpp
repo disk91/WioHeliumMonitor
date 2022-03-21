@@ -204,8 +204,8 @@ void refreshPing() {
           else if ( irtt > 16 ) color = TFT_ORANGE;
           else if ( irtt > 8 ) color = TFT_DARKGREEN;
           if ( irtt == 0 ) {
-            tft.drawLine(xOffset+1,HIST_PING_I_Y_OFFSET+3+4,xOffset+xSz-2,HIST_PING_I_Y_OFFSET-3+4,TFT_RED);
-            tft.drawLine(xOffset+1,HIST_PING_I_Y_OFFSET-3+4,xOffset+xSz-2,HIST_PING_I_Y_OFFSET+3+4,TFT_RED);        
+            tft.drawLine(xOffset+1,(HIST_PING_I_Y_OFFSET+HIST_PING_I_Y_SIZE-4)+3,xOffset+xSz-2,(HIST_PING_I_Y_OFFSET+HIST_PING_I_Y_SIZE-4)-3,TFT_RED);
+            tft.drawLine(xOffset+1,(HIST_PING_I_Y_OFFSET+HIST_PING_I_Y_SIZE-4)-3,xOffset+xSz-2,(HIST_PING_I_Y_OFFSET+HIST_PING_I_Y_SIZE-4)+3,TFT_RED);        
           } else {
             irtt = ((HIST_PING_I_Y_SIZE-6)*irtt)/HIST_PING_I_MAXRTT;
             tft.fillRect(xOffset,(HIST_PING_I_Y_OFFSET+HIST_PING_I_Y_SIZE-4)-irtt,xSz,irtt,color);
@@ -218,8 +218,8 @@ void refreshPing() {
           else if ( ertt > 200 ) color = TFT_ORANGE;
           else if ( ertt > 120 ) color = TFT_DARKGREEN;
           if ( ertt == 0 ) {
-            tft.drawLine(xOffset+1,HIST_PING_E_Y_OFFSET+3+4,xOffset+xSz-2,HIST_PING_E_Y_OFFSET-3+4,TFT_RED);
-            tft.drawLine(xOffset+1,HIST_PING_E_Y_OFFSET-3+4,xOffset+xSz-2,HIST_PING_E_Y_OFFSET+3+4,TFT_RED);        
+            tft.drawLine(xOffset+1,(HIST_PING_E_Y_OFFSET+HIST_PING_E_Y_SIZE-4)+3,xOffset+xSz-2,(HIST_PING_E_Y_OFFSET+HIST_PING_E_Y_SIZE-4)-3,TFT_RED);
+            tft.drawLine(xOffset+1,(HIST_PING_E_Y_OFFSET+HIST_PING_E_Y_SIZE-4)-3,xOffset+xSz-2,(HIST_PING_E_Y_OFFSET+HIST_PING_E_Y_SIZE-4)+3,TFT_RED);        
           } else {
             ertt = ((HIST_PING_E_Y_SIZE-6)*ertt)/HIST_PING_E_MAXRTT;
             tft.fillRect(xOffset,(HIST_PING_E_Y_OFFSET+HIST_PING_E_Y_SIZE-4)-ertt,xSz,ertt,color);
