@@ -42,6 +42,7 @@ void clearScreen();
 
 void displaySetup();
 void draw_splash_helium(int xOffset, int yOffset, int density);
-void refresUI();
+void refreshUI();
+void connectingWifi();
 
 #endif

@@ -24,6 +24,8 @@ void setupWifi();
 int32_t pingIP(char * ip);
 
 void wifiConfig();
+void getWiFiUID(char * uid[]);
 
+bool reportWatchium();
 
 #endif // __WIFI_H__

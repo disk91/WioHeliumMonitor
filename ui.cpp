@@ -126,6 +126,36 @@ void displaySplash() {
   #endif
 }
 
+// Animate WiFi connection on screen
+void connectingWifi() {
+    static int step = 5;
+    tft.setTextColor(TFT_GRAY);
+    tft.setFreeFont(FS9);     // Select the original small TomThumb font
+    if ( step == 5 ) {
+      tft.fillRect(0,215,320,15,TFT_BLACK);
+      tft.drawString("Connecting Wifi",(320-180)/2,215, GFXFF);        
+      step = 0;
+    }
+
+    tft.fillRect(220,215,100,15,TFT_BLACK);
+    switch ( step ) {
+      case 0:
+        tft.drawString(".",220,215, GFXFF); 
+        break;  
+      case 1:
+        tft.drawString("..",220,215, GFXFF); 
+        break;  
+      case 2:
+        tft.drawString("...",220,215, GFXFF); 
+        break;  
+      case 3:
+        tft.drawString("....",220,215, GFXFF); 
+        break;  
+    }
+    step = (step+1) & 0x3;
+}
+
+
 void clearScreen() {
     tft.fillScreen(TFT_BLACK);  
 }
@@ -136,25 +166,41 @@ void clearScreen() {
 // ========================================
 #define HIST_PING_X_OFFSET 2
 #define HIST_PING_X_SIZE 315
-#define HIST_PING_ITXT_Y_OFFSET 30
+#define HIST_PING_ITXT_Y_OFFSET 34
 #define HIST_PING_ITXT_Y_SIZE 20
 #define HIST_PING_I_Y_OFFSET (HIST_PING_ITXT_Y_OFFSET+HIST_PING_ITXT_Y_SIZE)
 #define HIST_PING_I_Y_SIZE   80
 #define HIST_PING_I_MAXRTT   80
 #define HIST_PING_EI_BREAK_SIZE 5
 #define HIST_PING_ETXT_Y_OFFSET (HIST_PING_I_Y_OFFSET+HIST_PING_I_Y_SIZE+HIST_PING_EI_BREAK_SIZE)
-#define HIST_PING_ETXT_Y_SIZE 20
+#define HIST_PING_ETXT_Y_SIZE 19
 #define HIST_PING_E_Y_OFFSET (HIST_PING_I_Y_OFFSET+HIST_PING_I_Y_SIZE+HIST_PING_ETXT_Y_SIZE+HIST_PING_EI_BREAK_SIZE)
 #define HIST_PING_E_Y_SIZE   80
 #define HIST_PING_E_MAXRTT  400
 #define HIST_PING_X_BAR_OFFSET 50
 #define HIST_PING_X_BAR_SPACE 2
 
+#define ID_X_OFFSET 2
+#define ID_Y_OFFSET 2
+
+#define HS_X_OFFSET 2
+#define HS_Y_OFFSET 17
+
+#define HSSTAT_X_OFFSET 305
+#define HSSTAT_Y_OFFSET 8
+
 void refreshPing() {
   char sTmp[10];
 
   // No need to refresh every time
   if ( !ui.screenInitialized ) {
+    // Id area
+    tft.fillRect(ID_X_OFFSET,ID_Y_OFFSET,310, 20, TFT_BLACK);
+    tft.setFreeFont(FM9);    
+    tft.setTextColor(TFT_GREEN);
+    tft.drawString((char*)state.uid,ID_X_OFFSET,ID_Y_OFFSET,GFXFF);
+
+    // ping area
     tft.fillRect(HIST_PING_X_OFFSET,HIST_PING_ITXT_Y_OFFSET,HIST_PING_X_SIZE,HIST_PING_ITXT_Y_SIZE+HIST_PING_I_Y_SIZE,TFT_BLACK);
     tft.fillRect(HIST_PING_X_OFFSET,HIST_PING_ETXT_Y_OFFSET,HIST_PING_X_SIZE,HIST_PING_ETXT_Y_SIZE+HIST_PING_E_Y_SIZE,TFT_BLACK);
     tft.setFreeFont(FF25);    
@@ -165,6 +211,32 @@ void refreshPing() {
     tft.drawRoundRect(HIST_PING_X_OFFSET,HIST_PING_E_Y_OFFSET,HIST_PING_X_SIZE,HIST_PING_E_Y_SIZE,R_SIZE,TFT_WHITE);
     ui.screenInitialized = true;
   }
+
+  // Hs name
+  if ( state.hsName[0] != '\0' ) {
+    tft.fillRect(HS_X_OFFSET,HS_Y_OFFSET,310, 17, TFT_BLACK);
+    tft.setFreeFont(FM9);    
+    tft.setTextColor(TFT_BLUE);
+    tft.drawString((char*)state.hsName,HS_X_OFFSET,HS_Y_OFFSET,GFXFF);
+  }
+  switch ( state.hsState ) {
+    case HSSTATE_UNKN:
+       tft.fillRoundRect(HSSTAT_X_OFFSET,HSSTAT_Y_OFFSET,10,10,5,TFT_WHITE);  
+       break;
+    case HSSTATE_OK:
+       tft.fillRoundRect(HSSTAT_X_OFFSET,HSSTAT_Y_OFFSET,10,10,5,TFT_GREEN);  
+       break;
+    case HSSTATE_WARN:
+       tft.fillRoundRect(HSSTAT_X_OFFSET,HSSTAT_Y_OFFSET,10,10,5,TFT_ORANGE);  
+       break;
+    case HSSTATE_ERROR:
+       tft.fillRoundRect(HSSTAT_X_OFFSET,HSSTAT_Y_OFFSET,10,10,5,TFT_RED);  
+       break;
+    default:
+       tft.fillRoundRect(HSSTAT_X_OFFSET,HSSTAT_Y_OFFSET,10,10,5,TFT_BLACK);  
+       break;
+  }
+
 
   // clean the previous bars
   int xSz = (HIST_PING_X_SIZE - (HIST_PING_X_OFFSET+HIST_PING_X_BAR_OFFSET + MAXBUFFER*HIST_PING_X_BAR_SPACE)) / MAXBUFFER;
@@ -230,7 +302,9 @@ void refreshPing() {
   }
 }
 
-void refresUI() {
+
+
+void refreshUI() {
 
   bool hasAction = false;
   bool forceRefresh = false;

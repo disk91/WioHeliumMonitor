@@ -24,8 +24,13 @@
 #define SSID_SZ     64
 #define SSID_PWD_SZ 64
 #define IP_SZ       16
+#define HSNAME_SZ   64
 
 #define MAXBUFFER    32
+#define HSSTATE_OK    0 
+#define HSSTATE_WARN  1
+#define HSSTATE_ERROR 2
+#define HSSTATE_UNKN  99
 
 typedef struct s_state {
 
@@ -33,6 +38,7 @@ typedef struct s_state {
   uint8_t   password[SSID_PWD_SZ];  // WiFi password
   uint8_t   extPingIp[IP_SZ];       // an IP address on Internet 
   uint8_t   intPingIp[IP_SZ];       // the hotspot IP address on LAN
+  uint8_t   uid[13];                // MAC address in hex
 
   uint8_t   avgExtPing[MAXBUFFER];  // ping rtt history / 8 ms (apparently the step we have)
   uint8_t   avgIntPing[MAXBUFFER];
@@ -41,6 +47,12 @@ typedef struct s_state {
   int       writePtr;
   int       elements;         // number of data in buffer
   boolean   hasRefreshed;     // Data has refreshed
+
+  uint8_t   intState;         // internal network state (5 consecutive failed = down)
+  uint8_t   extState;         // external network state (5 consecutive failed = down)
+
+  uint8_t   hsName[HSNAME_SZ];  // Hotspot name associated
+  uint8_t   hsState;            // watchium Hotspot state 0 = good / 1 Warn / 2 Error
 
 } state_t;
 
@@ -52,6 +64,7 @@ void storeConfig();
 
 void initState();
 void runMonitor();
+void reportData();
 
 uint8_t getIndexInBuffer(int i);
 

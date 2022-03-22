@@ -46,6 +46,10 @@
   state.readPtr = 0;
   state.writePtr = 0;
   state.elements = 0;
+  state.intState = 0;
+  state.extState = 0;  
+  state.hsName[0] = '\0';
+  state.hsState = HSSTATE_UNKN;
   state.hasRefreshed = false;
 }
 
@@ -82,19 +86,22 @@ uint8_t getLastIndexWritten() {
 }
 
 
-// Hack the malloc wrapper to clear the memory leak
-// in the WiFi stack ...
-void erpcs_initMallocHisto();
-void erpc_cleanMalloc();
-
 void runMonitor() {
 
-    erpcs_initMallocHisto();
     uint32_t rttE = pingIP((char*)state.extPingIp);
-    erpc_cleanMalloc();
-    erpcs_initMallocHisto();
     uint32_t rttI = pingIP((char*)state.intPingIp);
-    erpc_cleanMalloc();
     addInBuffer(rttE,rttI);
+    if ( rttE > 0 ) state.extState = 5;
+    else if ( state.extState > 0 ) state.extState--;
+    if ( rttI > 0 ) state.intState = 5;
+    else if ( state.intState > 0 ) state.intState--;
+    
+}
 
+
+void reportData() {
+  //if ( state.extState > 0 ) {
+    // network looks available
+    reportWatchium();
+  //}
 }

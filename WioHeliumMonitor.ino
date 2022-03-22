@@ -60,9 +60,10 @@ void loop() {
 
   if ( cTime >= 30000 ) {
     runMonitor();
+    reportData();
     cTime = 0;
   }
-  refresUI();
+  refreshUI();
 
   delay(10);
   long duration = millis() - sTime;
