@@ -66,12 +66,12 @@ void loop() {
 
   if ( pTime >= PING_PERIOD_MS ) {
     runMonitor();
-    reportData();
     pTime = 0;
     if ( rTime >= REPORT_PERIOD_MS ) {
-      refreshUI();
+      reportData();
       rTime = 0;
     }    
+    refreshUI();
   }
 
   delay(10);
