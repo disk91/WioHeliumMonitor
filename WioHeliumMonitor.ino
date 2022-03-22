@@ -52,21 +52,32 @@ void setup() {
   
 }
 
+
+#define PING_PERIOD_MS    (30*1000)
+#define REPORT_PERIOD_MS  (15*60*1000)
+
 void loop() {
-  static unsigned long cTime = 29000;
-  unsigned long sTime;
+  static uint32_t cTime = 0;
+  static uint32_t pTime = PING_PERIOD_MS - 1000;        // last ping
+  static uint32_t rTime = REPORT_PERIOD_MS - 1000;      // report time
+  uint32_t sTime;
   
   sTime = millis();
 
-  if ( cTime >= 30000 ) {
+  if ( pTime >= PING_PERIOD_MS ) {
     runMonitor();
     reportData();
-    cTime = 0;
+    pTime = 0;
+    if ( rTime >= REPORT_PERIOD_MS ) {
+      refreshUI();
+      rTime = 0;
+    }    
   }
-  refreshUI();
 
   delay(10);
   long duration = millis() - sTime;
   if ( duration < 0 ) duration = 10;
   cTime += duration;
+  pTime += duration;
+  rTime += duration;
 }

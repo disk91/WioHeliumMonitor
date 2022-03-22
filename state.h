@@ -38,7 +38,7 @@ typedef struct s_state {
   uint8_t   password[SSID_PWD_SZ];  // WiFi password
   uint8_t   extPingIp[IP_SZ];       // an IP address on Internet 
   uint8_t   intPingIp[IP_SZ];       // the hotspot IP address on LAN
-  uint8_t   uid[13];                // MAC address in hex
+  uint8_t   uid[15];                // MAC address in hex + Checksum
 
   uint8_t   avgExtPing[MAXBUFFER];  // ping rtt history / 8 ms (apparently the step we have)
   uint8_t   avgIntPing[MAXBUFFER];
