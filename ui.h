@@ -44,5 +44,6 @@ void displaySetup();
 void draw_splash_helium(int xOffset, int yOffset, int density);
 void refreshUI();
 void connectingWifi();
+void displayQRCode();
 
 #endif

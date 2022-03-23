@@ -24,6 +24,7 @@
 #include "state.h"
 #include "TFT_eSPI.h"
 #include "ui.h"
+#include "qrcode.h"
 
 TFT_eSPI tft;
 #define X_OFFSET 2
@@ -302,6 +303,32 @@ void refreshPing() {
   }
 }
 
+// ------
+// Display QRCode for the UI
+
+void displayQRCode() {
+  QRCode qrcode;
+  uint8_t qrcodeData[qrcode_getBufferSize(3)];
+  qrcode_initText(&qrcode, qrcodeData, 3, 0, (char*)state.uid);
+
+  int sz = 20+qrcode.size*5;
+  int xs =  160 - sz / 2;
+  int ys =  120 - sz / 2;
+  
+  tft.fillRect(xs,ys,sz,sz,TFT_BLACK);
+  Serial.println(qrcode.size);
+  for (uint8_t y = 0; y < qrcode.size; y++) {
+    for (uint8_t x = 0; x < qrcode.size; x++) {
+      if ( qrcode_getModule(&qrcode, x, y) ) {
+        tft.fillRect(10+xs+(5*x),10+ys+(5*y),5,5,TFT_WHITE);
+      } else {
+        tft.fillRect(10+xs+(5*x),10+ys+(5*y),5,5,TFT_BLACK);
+      }
+    }
+  }
+  ui.screenInitialized = false;
+}
+
 
 
 void refreshUI() {
@@ -317,7 +344,7 @@ void refreshUI() {
   
     hasAction=true;
   } else if (digitalRead(WIO_KEY_A) == LOW) {
-
+    displayQRCode();
     hasAction=true;
   } else if (digitalRead(WIO_5S_UP) == LOW) {
 
@@ -337,7 +364,7 @@ void refreshUI() {
   }
 
   // refresh the graph history part
-  if ( state.hasRefreshed == true || ui.screenInitialized == false) {
+  if ( !hasAction && ( state.hasRefreshed == true || ui.screenInitialized == false ) ) {
 //    ui.lastWrId = state.writePtr;
     refreshPing();
     state.hasRefreshed = false;
