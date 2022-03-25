@@ -71,8 +71,8 @@ void loop() {
       reportData();
       rTime = 0;
     }    
-    refreshUI();
   }
+  refreshUI();
 
   delay(10);
   long duration = millis() - sTime;

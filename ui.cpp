@@ -180,6 +180,7 @@ void clearScreen() {
 #define HIST_PING_E_MAXRTT  400
 #define HIST_PING_X_BAR_OFFSET 50
 #define HIST_PING_X_BAR_SPACE 2
+#define HIST_PING_GFX_Y_SIZE  (HIST_PING_I_Y_OFFSET+HIST_PING_I_Y_SIZE+HIST_PING_EI_BREAK_SIZE+HIST_PING_ETXT_Y_SIZE+HIST_PING_E_Y_SIZE)
 
 #define ID_X_OFFSET 2
 #define ID_Y_OFFSET 2
@@ -188,7 +189,7 @@ void clearScreen() {
 #define HS_Y_OFFSET 17
 
 #define HSSTAT_X_OFFSET 305
-#define HSSTAT_Y_OFFSET 8
+#define HSSTAT_Y_OFFSET 22
 
 void refreshPing() {
   char sTmp[10];
@@ -305,28 +306,59 @@ void refreshPing() {
 
 // ------
 // Display QRCode for the UI
-
+boolean QRCodeState = false;
 void displayQRCode() {
-  QRCode qrcode;
-  uint8_t qrcodeData[qrcode_getBufferSize(3)];
-  qrcode_initText(&qrcode, qrcodeData, 3, 0, (char*)state.uid);
 
-  int sz = 20+qrcode.size*5;
-  int xs =  160 - sz / 2;
-  int ys =  120 - sz / 2;
+  if ( !QRCodeState ) {
+    QRCode qrcode;
+    uint8_t qrcodeData[qrcode_getBufferSize(3)];
+    qrcode_initText(&qrcode, qrcodeData, 3, 0, (char*)state.uid);
   
-  tft.fillRect(xs,ys,sz,sz,TFT_BLACK);
-  Serial.println(qrcode.size);
-  for (uint8_t y = 0; y < qrcode.size; y++) {
-    for (uint8_t x = 0; x < qrcode.size; x++) {
-      if ( qrcode_getModule(&qrcode, x, y) ) {
-        tft.fillRect(10+xs+(5*x),10+ys+(5*y),5,5,TFT_WHITE);
-      } else {
-        tft.fillRect(10+xs+(5*x),10+ys+(5*y),5,5,TFT_BLACK);
+    int sz = 20+qrcode.size*5;
+    int xs =  160 - sz / 2;
+    int ys =  120 - sz / 2;
+    
+    tft.fillRect(xs,ys,sz,sz,TFT_BLACK);
+    Serial.println(qrcode.size);
+    for (uint8_t y = 0; y < qrcode.size; y++) {
+      for (uint8_t x = 0; x < qrcode.size; x++) {
+        if ( qrcode_getModule(&qrcode, x, y) ) {
+          tft.fillRect(10+xs+(5*x),10+ys+(5*y),5,5,TFT_WHITE);
+        } else {
+          tft.fillRect(10+xs+(5*x),10+ys+(5*y),5,5,TFT_BLACK);
+        }
       }
     }
+    QRCodeState = true;
+  } else {
+    tft.fillRect(HIST_PING_X_OFFSET,HIST_PING_ITXT_Y_OFFSET,HIST_PING_X_SIZE,HIST_PING_GFX_Y_SIZE,TFT_BLACK);
+    ui.screenInitialized = false;
+    QRCodeState = false;
   }
-  ui.screenInitialized = false;
+}
+
+// ------
+// Display activity
+uint32_t lastActivityDisplay = 0;
+boolean  lastActivityState = false;
+
+#define ACTIVITY_X_OFFSET 305
+#define ACTIVITY_Y_OFFSET 8
+
+void displayActivity() {
+
+  uint32_t t = millis();
+  if ( (t - lastActivityDisplay) > 500 ) {
+    lastActivityDisplay = t;
+    if ( lastActivityState ) {      
+       tft.fillRoundRect(ACTIVITY_X_OFFSET,ACTIVITY_Y_OFFSET,10,10,5,TFT_WHITE);  
+    } else {
+       tft.fillRoundRect(ACTIVITY_X_OFFSET,ACTIVITY_Y_OFFSET,10,10,5,TFT_BLACK);  
+    }
+    lastActivityState =  !lastActivityState;
+  }
+
+  
 }
 
 
@@ -338,13 +370,13 @@ void refreshUI() {
   bool configHasChanged = false;
   
   if (digitalRead(WIO_KEY_C) == LOW) {
-
     hasAction=true;
   } else if (digitalRead(WIO_KEY_B) == LOW) {
-  
+
     hasAction=true;
   } else if (digitalRead(WIO_KEY_A) == LOW) {
-    displayQRCode();
+    displayQRCode();  
+LOGLN(("KEY"));
     hasAction=true;
   } else if (digitalRead(WIO_5S_UP) == LOW) {
 
@@ -364,11 +396,13 @@ void refreshUI() {
   }
 
   // refresh the graph history part
-  if ( !hasAction && ( state.hasRefreshed == true || ui.screenInitialized == false ) ) {
+  if ( !hasAction && !QRCodeState && ( state.hasRefreshed == true || ui.screenInitialized == false ) ) {
 //    ui.lastWrId = state.writePtr;
     refreshPing();
     state.hasRefreshed = false;
   }  
+
+  displayActivity();
 
   // avoid re-entering
   if ( hasAction ) delay(300); 
