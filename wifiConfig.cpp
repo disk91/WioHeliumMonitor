@@ -49,6 +49,61 @@ const char index_html2[] PROGMEM = R"rawliteral(
   </form>
 </body></html>)rawliteral";
 
+#define PATTERN_ENTRIES 35
+String urlDecode(String s) {
+  char patterns[PATTERN_ENTRIES*2][4] = {
+    "%20", " ",  // [0]
+    "%21", "!",
+    "%22", "\"",
+    "%23", "#",
+    "%24", "$",
+    "%25", "%",
+    "%26", "&",
+    "%27", "'",
+    "%28", "(",
+    "%29", ")",
+    "%2A", "*",  // [10]
+    "%2B", "+",
+    "%2C", ",",
+    "%2D", "-",
+    "%2E", ".",
+    "%2F", "/",
+    "%2F", "/",
+    "%3A", ":",
+    "%3B", ";",
+    "%3C", "<",
+    "%3D", "=", // [20]
+    "%3E", ">",
+    "%3F", "?",
+    "%40", "@",
+    "%5B", "[", 
+    "%5C", "\\",
+    "%5D", "]",
+    "%5E", "^",
+    "%5F", "_",
+    "%60", "`",
+    "%7B", "{", // [30]
+    "%7C", "|",
+    "%7D", "}", 
+    "%7E", "~",
+    "%80", "€"  // [34]
+  };
+
+  if ( s.indexOf("%") >= 0 ) {
+   for ( int i = 0 ; i < PATTERN_ENTRIES ; i++ ) {
+    int p;
+    while ( (p = s.indexOf( patterns[2*i] ) ) >= 0 ) {
+      String t = s.substring(0,p);
+      t+= patterns[1+2*i];
+      t+= s.substring(p+3);
+      s = t;
+    }
+   }  
+  }
+  return s;
+}
+
+
 void wifiConfig() {
 
     displaySetup();
@@ -112,6 +167,7 @@ void wifiConfig() {
                       } else {    // if you got a newline, then clear currentLine:
                           // test if the GET line
                           if ( currentLine.length() > 20 && currentLine.startsWith("GET /config?") ) {
+                            currentLine = urlDecode(currentLine);
                             if (    currentLine.indexOf("ssid_l=") >= 0 
                                  && currentLine.indexOf("ssid_n=") >= 0 
                                  && currentLine.indexOf("password=") >= 0 
