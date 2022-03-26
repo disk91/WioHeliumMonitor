@@ -28,6 +28,7 @@
 #include "wifi.h"
 #include "state.h"
 #include "keys.h"
+#include "sound.h"
 
 state_t state;
 void setup() {
@@ -44,7 +45,7 @@ void setup() {
     wifiConfig();
     NVIC_SystemReset();
   }
-  
+  setupSound();
   initState();
   displaySplash();
   setupWifi();
@@ -55,14 +56,16 @@ void setup() {
 
 #define PING_PERIOD_MS    (30*1000)
 #define REPORT_PERIOD_MS  (15*60*1000)
+#define SOUND_PERIOD_MS   (1*60*1000)
 
 void loop() {
   static uint32_t cTime = 0;
   static uint32_t pTime = PING_PERIOD_MS - 1000;        // last ping
   static uint32_t rTime = REPORT_PERIOD_MS - 1000;      // report time
-  uint32_t sTime;
+  static uint32_t sTime = 0;                            // last sound played
+  uint32_t stTime;
   
-  sTime = millis();
+  stTime = millis();
 
   if ( pTime >= PING_PERIOD_MS ) {
     runMonitor();
@@ -74,10 +77,19 @@ void loop() {
   }
   refreshUI();
 
+  // Play sound notification when a problem is detected
+  if ( state.withSound && sTime > SOUND_PERIOD_MS) {
+    if ( intState == 0 || extState == 0 || hsState > 0 ) {
+      playSound();
+      sTime = 0;
+    }
+  }
+
   delay(10);
-  long duration = millis() - sTime;
+  long duration = millis() - stTime;
   if ( duration < 0 ) duration = 10;
   cTime += duration;
   pTime += duration;
   rTime += duration;
+  sTime += duration;
 }

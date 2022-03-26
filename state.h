@@ -24,7 +24,7 @@
 #define SSID_SZ     64
 #define SSID_PWD_SZ 64
 #define IP_SZ       16
-#define HSNAME_SZ   64
+#define HSNAME_SZ   24
 
 #define MAXBUFFER    32
 #define HSSTATE_OK    0 
@@ -47,6 +47,7 @@ typedef struct s_state {
   int       writePtr;
   int       elements;         // number of data in buffer
   boolean   hasRefreshed;     // Data has refreshed
+  boolean   withSound;        // Enable sound
 
   uint8_t   intState;         // internal network state (5 consecutive failed = down)
   uint8_t   extState;         // external network state (5 consecutive failed = down)

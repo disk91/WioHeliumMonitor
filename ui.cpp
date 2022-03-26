@@ -24,6 +24,7 @@
 #include "state.h"
 #include "TFT_eSPI.h"
 #include "ui.h"
+#include "sound.h"
 #include "qrcode.h"
 
 TFT_eSPI tft;
@@ -183,10 +184,14 @@ void clearScreen() {
 #define HIST_PING_GFX_Y_SIZE  (HIST_PING_I_Y_OFFSET+HIST_PING_I_Y_SIZE+HIST_PING_EI_BREAK_SIZE+HIST_PING_ETXT_Y_SIZE+HIST_PING_E_Y_SIZE)
 
 #define ID_X_OFFSET 2
+#define ID_X_SIZE   (270-ID_X_OFFSET)
 #define ID_Y_OFFSET 2
+#define ID_Y_SIZE   20
 
 #define HS_X_OFFSET 2
+#define HS_X_SIZE   (270-HS_X_OFFSET)
 #define HS_Y_OFFSET 17
+#define HS_Y_SIZE   17
 
 #define HSSTAT_X_OFFSET 305
 #define HSSTAT_Y_OFFSET 22
@@ -197,7 +202,7 @@ void refreshPing() {
   // No need to refresh every time
   if ( !ui.screenInitialized ) {
     // Id area
-    tft.fillRect(ID_X_OFFSET,ID_Y_OFFSET,310, 20, TFT_BLACK);
+    tft.fillRect(ID_X_OFFSET,ID_Y_OFFSET,ID_X_SIZE, ID_Y_SIZE, TFT_BLACK);
     tft.setFreeFont(FM9);    
     tft.setTextColor(TFT_GREEN);
     tft.drawString((char*)state.uid,ID_X_OFFSET,ID_Y_OFFSET,GFXFF);
@@ -216,7 +221,7 @@ void refreshPing() {
 
   // Hs name
   if ( state.hsName[0] != '\0' ) {
-    tft.fillRect(HS_X_OFFSET,HS_Y_OFFSET,310, 17, TFT_BLACK);
+    tft.fillRect(HS_X_OFFSET,HS_Y_OFFSET,HS_X_SIZE, HS_Y_SIZE, TFT_BLACK);
     tft.setFreeFont(FM9);    
     tft.setTextColor(TFT_BLUE);
     tft.drawString((char*)state.hsName,HS_X_OFFSET,HS_Y_OFFSET,GFXFF);
@@ -361,6 +366,39 @@ void displayActivity() {
   
 }
 
+// ------------------------------------
+// Sound State
+#define SOUNDSTATE_X_OFFSET 270
+#define SOUNDSTATE_Y_OFFSET 8
+#define SOUNDSTATE_Y_SZ 24
+#define SOUNDSTATE_X_SZ 30
+
+void displaySoundState() {
+
+  const char * logo;
+  int sx, sy;
+  if ( state.withSound ) {
+      logo = soundOn_data;
+      sx = sOnWidth;
+      sy = sOnHeight;
+  } else {
+      logo = soundOff_data;
+      sx = sOffWidth;
+      sy = sOffHeight;
+  }
+  tft.fillRect(SOUNDSTATE_X_OFFSET,SOUNDSTATE_Y_OFFSET,SOUNDSTATE_X_SZ,SOUNDSTATE_Y_SZ,TFT_BLACK);
+  for ( int y = SOUNDSTATE_Y_OFFSET ; y < SOUNDSTATE_Y_OFFSET+sy ; y++ ) {
+    for ( int x  = SOUNDSTATE_X_OFFSET ; x < SOUNDSTATE_X_OFFSET+sx ; x++) {
+        uint8_t pixel[3];
+        SOUND_PIXEL(logo,pixel);
+        uint16_t r = ((255-pixel[0]) >> 3);
+        uint16_t g = ((255-pixel[1]) >> 2);
+        uint16_t b = ((255-pixel[2]) >> 3);
+        uint16_t color = ( ( r << 11 ) & 0xF800 ) | ( ( g << 5 ) & 0x07E0 ) | ( b & 0x001F ); 
+        tft.drawPixel(x,y,color);
+    }
+  }
+}
 
 
 void refreshUI() {
@@ -372,11 +410,10 @@ void refreshUI() {
   if (digitalRead(WIO_KEY_C) == LOW) {
     hasAction=true;
   } else if (digitalRead(WIO_KEY_B) == LOW) {
-
+    state.withSound = !state.withSound;
     hasAction=true;
   } else if (digitalRead(WIO_KEY_A) == LOW) {
     displayQRCode();  
-LOGLN(("KEY"));
     hasAction=true;
   } else if (digitalRead(WIO_5S_UP) == LOW) {
 
@@ -395,13 +432,18 @@ LOGLN(("KEY"));
     hasAction=true;
   }
 
+  if ( hasAction || ui.screenInitialized == false ) {
+    displaySoundState();
+  }
+
+
   // refresh the graph history part
   if ( !hasAction && !QRCodeState && ( state.hasRefreshed == true || ui.screenInitialized == false ) ) {
-//    ui.lastWrId = state.writePtr;
     refreshPing();
     state.hasRefreshed = false;
   }  
 
+  
   displayActivity();
 
   // avoid re-entering

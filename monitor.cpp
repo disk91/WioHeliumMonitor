@@ -51,6 +51,7 @@
   state.hsName[0] = '\0';
   state.hsState = HSSTATE_UNKN;
   state.hasRefreshed = false;
+  state.withSound = true;
 }
 
 // ---
