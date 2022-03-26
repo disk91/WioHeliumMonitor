@@ -79,7 +79,7 @@ void loop() {
 
   // Play sound notification when a problem is detected
   if ( state.withSound && sTime > SOUND_PERIOD_MS) {
-    if ( intState == 0 || extState == 0 || hsState > 0 ) {
+    if ( state.intState == 0 || state.extState == 0 || state.hsState > 0 ) {
       playSound();
       sTime = 0;
     }
