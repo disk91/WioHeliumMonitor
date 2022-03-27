@@ -87,10 +87,11 @@ int32_t pingIP(char * ip) {
 bool reportWatchium() {
    
    WiFiClient client;
-   if (!client.connect(srv, 80)) {
+   if (!client.connect(srv, 80, 1000)) {
+//   if (client.connect("10.0.0.247", 80, 900) == 0) { // failure test
+       LOGLN(("Failed to reach server"));
        return false;
    }
-
    String url = "GET /wioheliummonitor/v1.0/";
    url += (char *)state.uid;
    url += "/";
@@ -107,7 +108,7 @@ bool reportWatchium() {
   client.println();
   
    int maxloops = 0;
- 
+   
     //wait for the server's reply to become available
     while (!client.available() && maxloops < 1000) {
         maxloops++;

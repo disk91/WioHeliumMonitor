@@ -185,5 +185,27 @@ void erpc_free(void *ptr)
 
  
   */
+/** =========================================================
+ *  Modify  to make sure the 
+ *  erpc_transport_arbirator.cpp
+ *  
+ *  Modification not kept ... as a consequence, trying to execute
+ *  a GET on a non responding server will crash the WIO
+ *  a timeout will make watchdog rebooting ...
+ */
+/*
+erpc_status_t TransportArbitrator::clientReceive(client_token_t token)
+{
+    assert(token != 0 && "invalid client token");
 
- 
+    // Convert token to pointer to info struct for this client receive request.
+    PendingClientInfo *info = reinterpret_cast<PendingClientInfo *>(token);
+
+    // Wait on the semaphore until we're signaled.
+    //info->m_sem.get(Semaphore::kWaitForever);
+    info->m_sem.get(5000000);
+    removePendingClient(info);
+
+    return kErpcStatus_Success;
+}
+ */

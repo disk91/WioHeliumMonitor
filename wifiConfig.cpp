@@ -146,7 +146,7 @@ void wifiConfig() {
           while (client.connected()) {            
               if (client.available()) {             
                   char c = client.read();             
-                  LOG((c));                    
+                  //LOG((c));                    
                   if (c == '\n') {
                       // if the current line is blank, you got two newline characters in a row.
                       // that's the end of the client HTTP request, so send a response:

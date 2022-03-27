@@ -29,12 +29,14 @@
 #include "state.h"
 #include "keys.h"
 #include "sound.h"
+#include "watchdog.h"
 
 state_t state;
 void setup() {
   #if defined SERIALCONFIG || defined DEBUG 
      Serial.begin(9600);
      while (!Serial && millis() < 5000);
+     LOGLN(("####################################################"));
   #endif
   
   initScreen();
@@ -50,7 +52,9 @@ void setup() {
   displaySplash();
   setupWifi();
   clearScreen();
-  
+
+  initWatchdog();
+  enableWatchdog(20000);
 }
 
 
@@ -64,13 +68,18 @@ void loop() {
   static uint32_t rTime = REPORT_PERIOD_MS - 1000;      // report time
   static uint32_t sTime = 0;                            // last sound played
   uint32_t stTime;
+
+  iAmAlive();
   
   stTime = millis();
 
   if ( pTime >= PING_PERIOD_MS ) {
     runMonitor();
     pTime = 0;
-    if ( rTime >= REPORT_PERIOD_MS ) {
+    if ( rTime >= REPORT_PERIOD_MS && state.extState == 5 ) {
+      // only report data when the external ping works 
+      // over network, otherwise make non sens and will crash the Wio
+      iAmAlive();
       reportData();
       rTime = 0;
     }    
