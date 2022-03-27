@@ -87,8 +87,8 @@ int32_t pingIP(char * ip) {
 bool reportWatchium() {
    
    WiFiClient client;
-   if (!client.connect(srv, 80, 1000)) {
 //   if (client.connect("10.0.0.247", 80, 900) == 0) { // failure test
+   if (!client.connect(srv, 80, 1000)) {
        LOGLN(("Failed to reach server"));
        return false;
    }
