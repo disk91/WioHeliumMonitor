@@ -70,3 +70,7 @@ The project uses a WIO Terminal you need to make some specific stuffs:
 <img src="img/WioHeliumMonitor_DisplayQR.PNG" alt="Wio Helium Monitor Setup" width="600"/>
 
 
+## Known problems
+- WiFi network names & password with UTF8 or unusual characters is not supported
+- The device will restart when the watchium server is not reachable. This is due to the Arduino stack never returning when the target server can't be reached. The bypass solution I found has side effect I was not able to debug in a short period of time.
+
