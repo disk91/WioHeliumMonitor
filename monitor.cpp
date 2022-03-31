@@ -22,8 +22,12 @@
  #include "keys.h"
  #include "state.h"
  #include "wifi.h"
-
+ #include "watchdog.h"
+ #include "loraCom.h"
+ 
  void initState() {
+  state.isLoRaSet = false;
+ 
   if ( readConfig() ) {
     LOGF(("SSID : %s\r\n",state.ssid));
     LOGF(("PASS : %s\r\n",state.password));
@@ -43,6 +47,24 @@
     NVIC_SystemReset();
   }
 
+  // Manage statis LoRaConfig
+  uint8_t deveui[] = __DEVEUI;
+  uint8_t appeui[] = __APPEUI;
+  uint8_t appkey[] = __APPKEY;
+  bool zero = true;
+  for ( int i = 0 ; i < 8 ; i++ ) {
+    if ( deveui[i] != 0 ) zero = false;
+  }
+  if ( !zero ) {
+    // we have a static configuration
+    bcopy(deveui,loraConf.deveui,DEVEUI_SZ);
+    bcopy(appeui,loraConf.appeui,APPEUI_SZ);
+    bcopy(appkey,loraConf.appkey,APPKEY_SZ);
+    loraConf.zone = __ZONE;
+    state.isLoRaSet = true;
+    LOGLN(("LoRa config Set"));
+  }
+
   state.readPtr = 0;
   state.writePtr = 0;
   state.elements = 0;
@@ -52,6 +74,9 @@
   state.hsState = HSSTATE_UNKN;
   state.hasRefreshed = false;
   state.withSound = true;
+  state.e5Detected = false;
+  state.isRegistered = false;
+  state.isLoRaInit = false;
 }
 
 // ---
@@ -90,7 +115,9 @@ uint8_t getLastIndexWritten() {
 void runMonitor() {
 
     uint32_t rttE = pingIP((char*)state.extPingIp);
+    iAmAlive();
     uint32_t rttI = pingIP((char*)state.intPingIp);
+    iAmAlive();
     addInBuffer(rttE,rttI);
     if ( rttE > 0 ) state.extState = 5;
     else if ( state.extState > 0 ) state.extState--;
@@ -99,10 +126,40 @@ void runMonitor() {
     
 }
 
+void runLoRaPing() {
 
-void reportData() {
-  //if ( state.extState > 0 ) {
+  uint8_t data[8];
+  for ( int i = 0 ; i < 7 ; i ++ ) {
+    data[i] = state.uidi[i];
+  }
+  data[7] = ((state.intState << 4) & 0xF0) | (state.extState & 0x0F);
+  do_send(1, data, 8, 7, 14, false, 0);
+  
+}
+
+
+bool reportData() {
+  if (state.extState == 5) {
     // network looks available
-    reportWatchium();
-  //}
+    bool r = reportWatchium();
+    iAmAlive();
+    if ( r && state.e5Detected && state.isRegistered ) {
+      getLoRaConfig();
+      iAmAlive();
+      // make sure we init LoRa also when the setup is static
+      loraInit();        
+      iAmAlive();
+    }  
+    return true;
+  } else {
+    // prefer report over LoRaWan
+    uint8_t data[8];
+    for ( int i = 0 ; i < 7 ; i ++ ) {
+      data[i] = state.uidi[i];
+    }
+    data[7] = ((state.intState << 4) & 0xF0) | (state.extState & 0x0F);
+    // the maximum SF/DR possible in the zone will be automatically set
+    do_send(1, data, 8, 12, 30, false, 1);
+    return false;
+  }
 }

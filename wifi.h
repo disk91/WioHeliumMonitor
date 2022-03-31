@@ -27,5 +27,8 @@ void wifiConfig();
 void getWiFiUID(char * uid[]);
 
 bool reportWatchium();
+bool getLoRaConfig();
+
+uint32_t hexStrToInt(char * st, int sz);
 
 #endif // __WIFI_H__

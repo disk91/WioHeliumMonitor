@@ -17,6 +17,7 @@
  *
  *  Author : Paul Pinault (disk91.com)
  */  
+#include <Arduino.h>
 
 #ifndef __STATE_H
 #define __STATE_H
@@ -39,6 +40,7 @@ typedef struct s_state {
   uint8_t   extPingIp[IP_SZ];       // an IP address on Internet 
   uint8_t   intPingIp[IP_SZ];       // the hotspot IP address on LAN
   uint8_t   uid[15];                // MAC address in hex + Checksum
+  uint8_t   uidi[7];                // MAC addresse in byte + Checksum
 
   uint8_t   avgExtPing[MAXBUFFER];  // ping rtt history / 8 ms (apparently the step we have)
   uint8_t   avgIntPing[MAXBUFFER];
@@ -46,15 +48,20 @@ typedef struct s_state {
   int       readPtr;          // circular buffer
   int       writePtr;
   int       elements;         // number of data in buffer
-  boolean   hasRefreshed;     // Data has refreshed
-  boolean   withSound;        // Enable sound
+  bool      hasRefreshed;     // Data has refreshed
+  bool      withSound;        // Enable sound
 
   uint8_t   intState;         // internal network state (5 consecutive failed = down)
   uint8_t   extState;         // external network state (5 consecutive failed = down)
 
   uint8_t   hsName[HSNAME_SZ];  // Hotspot name associated
   uint8_t   hsState;            // watchium Hotspot state 0 = good / 1 Warn / 2 Error
+  bool      isRegistered;     // true when the device is associated with a hotspot
 
+  bool      e5Detected;
+  bool      isLoRaSet;        // true when the lora config has been retreived
+  bool      isLoRaInit;       // true when lora stack has been initialized
+  
 } state_t;
 
 extern state_t state;
@@ -65,7 +72,8 @@ void storeConfig();
 
 void initState();
 void runMonitor();
-void reportData();
+bool reportData();
+void runLoRaPing();
 
 uint8_t getIndexInBuffer(int i);
 

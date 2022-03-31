@@ -30,12 +30,14 @@
 #include "keys.h"
 #include "sound.h"
 #include "watchdog.h"
+#include "LoraCom.h"
 
 state_t state;
 void setup() {
   #if defined SERIALCONFIG || defined DEBUG 
      Serial.begin(9600);
      while (!Serial && millis() < 5000);
+     LOGLN((""));
      LOGLN(("####################################################"));
   #endif
   
@@ -51,6 +53,7 @@ void setup() {
   initState();
   displaySplash();
   setupWifi();
+  loraSetup();
   clearScreen();
 
   initWatchdog();
@@ -58,13 +61,16 @@ void setup() {
 }
 
 
-#define PING_PERIOD_MS    (30*1000)
-#define REPORT_PERIOD_MS  (15*60*1000)
-#define SOUND_PERIOD_MS   (1*60*1000)
+#define PING_PERIOD_MS     (30*1000)
+#define LORAPING_PERIOD_MS (20*60*1000)
+#define REPORT_PERIOD_MS   (15*60*1000)
+#define SOUND_PERIOD_MS    (1*60*1000)
 
 void loop() {
   static uint32_t cTime = 0;
   static uint32_t pTime = PING_PERIOD_MS - 1000;        // last ping
+  //static uint32_t lTime = 0;                            // last LoRa ping 
+  static uint32_t lTime = LORAPING_PERIOD_MS - 5000;    // for test
   static uint32_t rTime = REPORT_PERIOD_MS - 1000;      // report time
   static uint32_t sTime = 0;                            // last sound played
   uint32_t stTime;
@@ -76,13 +82,18 @@ void loop() {
   if ( pTime >= PING_PERIOD_MS ) {
     runMonitor();
     pTime = 0;
-    if ( rTime >= REPORT_PERIOD_MS && state.extState == 5 ) {
+    if ( rTime >= REPORT_PERIOD_MS ) {
       // only report data when the external ping works 
       // over network, otherwise make non sens and will crash the Wio
-      iAmAlive();
-      reportData();
+      if ( !reportData() ) {
+        lTime = 0; // reported with LoRaWan
+      }
       rTime = 0;
     }    
+  }
+  if ( lTime >= LORAPING_PERIOD_MS ) {
+    runLoRaPing();
+    lTime = 0;
   }
   refreshUI();
 
@@ -94,6 +105,8 @@ void loop() {
     }
   }
 
+  loraLoop();
+
   delay(10);
   long duration = millis() - stTime;
   if ( duration < 0 ) duration = 10;
@@ -101,4 +114,5 @@ void loop() {
   pTime += duration;
   rTime += duration;
   sTime += duration;
+  lTime += duration;
 }

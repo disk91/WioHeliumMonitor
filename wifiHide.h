@@ -20,6 +20,6 @@
 #ifndef __WIFI_HIDE__
 #define __WIFI_HIDE__
 
-#define HIDE(x,y,z) x
+#define HIDE(x,y,z) 
 
 #endif
