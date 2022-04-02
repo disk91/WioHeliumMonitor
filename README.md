@@ -1,18 +1,21 @@
-**Doc in progress, code in progress, not yet ready to be used.**
+**Beta Open**
 
 
 # WioHeliumMonitor
 
 The purpose of this project is to monitor your Helium Hotspot and be alarmed when it is not working correctly.
 
-The solution currently ping the miner over the LAN and ping Internet to make sure the Hotspot is connected to the LAN and have an access to Internet. It get the hotspot status from watchium application.
+The solution currently ping the miner over the LAN and ping Internet to make sure the Hotspot is connected to the LAN and have an access to Internet. It get the hotspot status from watchium application. It also communicate over LoRaWan to test the Hotspot LoRa communication. LoRaWan is also used to report status when the WAN is not working.
 
 <img src="img/WioHeliumMonitor_MainScreen.PNG" alt="Wio Helium Monitor" width="600"/>
 
 Information are reported to [Watchium Application](https://watchium.disk91.com) for monitoring and alarming your hotspot from your smartphone. 
 
+All the Watchium User can use the WiFi information report. Watchium Silver & Gold user have the LoRaWan report enable. Watchium automatically distribute the LoRaWan credential and supports the communication costs.
+
+See the setup process above.
+
 ## Coming soon
-- test the LoRa communication
 - report the information over LoRa (using the network redundancy when the LAN is not available)
 - store configuration in an external flash
 
