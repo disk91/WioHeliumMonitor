@@ -31,16 +31,22 @@
 #include "sound.h"
 #include "watchdog.h"
 #include "LoraCom.h"
+#include "memory.h"
+
+#include <malloc.h>
 
 state_t state;
 void setup() {
+
+  memoryTraceInit();
+  
   #if defined SERIALCONFIG || defined DEBUG 
      Serial.begin(9600);
      while (!Serial && millis() < 5000);
      LOGLN((""));
      LOGLN(("####################################################"));
   #endif
-  
+    
   initScreen();
   displayTitle();
   delay(1000);
@@ -80,6 +86,9 @@ void loop() {
   stTime = millis();
 
   if ( pTime >= PING_PERIOD_MS ) {
+    #ifdef DEBUG
+      usedHeap();
+    #endif
     runMonitor();
     pTime = 0;
     if ( rTime >= REPORT_PERIOD_MS ) {

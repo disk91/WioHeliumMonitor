@@ -115,19 +115,19 @@ bool reportWatchium() {
        LOGLN(("Failed to reach server"));
        return false;
    }
-   String url = "GET /wioheliummonitor/v1.0/";
-   url += (char *)state.uid;
-   url += "/";
-   url += state.intState;
-   url += "/";
-   url += state.extState;   
-   url += "/";
-   url += " HTTP/1.1";
-  client.println(url);
-  client.println("Host: wiomonitor.disk91.com");
-  client.println("Scheme: http");
-  client.println("Accept: application/json");
-  client.println("User-Agent: wio-terminal");
+
+  client.print(F("GET /wioheliummonitor/v1.0/"));
+  client.print((char*)state.uid);
+  client.print(F("/"));
+  client.print(state.intState);
+  client.print(F("/"));
+  client.print(state.extState);
+  client.println(F("/ HTTP/1.1"));
+  
+  client.println(F("Host: wiomonitor.disk91.com"));
+  client.println(F("Scheme: http"));
+  client.println(F("Accept: application/json"));
+  client.println(F("User-Agent: wio-terminal"));
   client.println();
   
    int maxloops = 0;
@@ -158,6 +158,7 @@ bool reportWatchium() {
             strcpy((char*)state.hsName,hotspot.c_str());
             state.isRegistered = true;
           }
+          hotspot = (const char*)NULL;
         }
 
         int sStatus = line.indexOf("\"status\":");
@@ -169,47 +170,48 @@ bool reportWatchium() {
             LOGLN((status));
             state.hsState = atoi(status.c_str());
           }
+          status = (const char*)NULL;
         }              
+        line = (const char*)NULL;
     } else {
         LOGLN(("Client Timeout"));
     }
     client.stop();
-
     return true;
 }
 
 
 bool getLoRaConfig() {
 
-   if ( state.isLoRaSet ) return true;
-   
-   WiFiClient client;
-   if (!client.connect(srv, 80, 1000)) {
-       client.stop();
-       LOGLN(("Failed to reach server"));
-       return false;
-   }
-   String url = "GET /wioheliummonitor/v1.0/config/";
-   url += (char *)state.uid;
-   url += "/";
-   url += " HTTP/1.1";
-  client.println(url);
-  client.println("Host: wiomonitor.disk91.com");
-  client.println("Scheme: http");
-  client.println("Accept: application/json");
-  client.println("User-Agent: wio-terminal");
+  if ( state.isLoRaSet ) return true;
+
+  WiFiClient client;
+  if (!client.connect(srv, 80, 1000)) {
+      client.stop();
+      LOGLN(("Failed to reach server"));
+      return false;
+  }
+  client.print(F("GET /wioheliummonitor/v1.0/config/"));
+  client.print((char *)state.uid);
+  client.println(F("/ HTTP/1.1"));
+  
+  client.println(F("Host: wiomonitor.disk91.com"));
+  client.println(F("Scheme: http"));
+  client.println(F("Accept: application/json"));
+  client.println(F("User-Agent: wio-terminal"));
   client.println();
   
    int maxloops = 0;
+   String line;
    
     //wait for the server's reply to become available
-    while (!client.available() && maxloops < 1000) {
+    while (!client.available() && maxloops < 5000) {
         maxloops++;
         delay(1); //delay 1 msec
     }
     if (client.available() > 0) {
         //read back one line from the server
-        String line = client.readString(); // Read from the server response
+        line = client.readString(); // Read from the server response
         // Proceed various line-endings
         line.replace("\r\n", "\n");
         line.replace('\r', '\n');
@@ -218,16 +220,26 @@ bool getLoRaConfig() {
         int iDevEUI = line.indexOf("\"deveui\":");
         int iAppEUI = line.indexOf("\"appeui\":");
         int iAppKEY = line.indexOf("\"appkey\":");
+        int iZone   = line.indexOf("\"zone\":");
 
-        if ( iDevEUI < 0 || iAppEUI < 0 || iAppKEY < 0 ) goto quit_clean;
+        if ( iDevEUI < 0 || iAppEUI < 0 || iAppKEY < 0 || iZone < 0 ) {
+          LOGLN((line));
+          LOGLN(("Rejected from server"));
+          goto quit_clean;
+        }
 
         String devEUI = line.substring(iDevEUI);
         int eDevEUI = devEUI.indexOf("\",");
-        if ( eDevEUI < 0 ) goto quit_clean;
+        if ( eDevEUI < 0 ) {
+          LOGLN(("eDevEUI not found"));
+          devEUI = (const char*)NULL;
+          goto quit_clean;
+        }
         devEUI = line.substring(iDevEUI+10,iDevEUI+eDevEUI);
-        LOGLN((devEUI));
+        LOGF(("devEUI %s\r\n",devEUI.c_str()));
         if ( devEUI.length() != DEVEUI_STR_SZ ) {
             LOGLN(("DevEUI sz invalid"));
+            devEUI = (const char*)NULL;
             goto quit_clean; 
         }
         devEUI.toUpperCase();
@@ -235,14 +247,20 @@ bool getLoRaConfig() {
         for (int i = 0 ; i < DEVEUI_SZ ; i++) {
           loraConf.deveui[i] = (uint8_t)hexStrToInt(&s[2*i],2);
         }
+        devEUI = (const char*)NULL;
         
         String appEUI = line.substring(iAppEUI);
         int eAppEUI = appEUI.indexOf("\",");
-        if ( eAppEUI < 0 ) goto quit_clean;
+        if ( eAppEUI < 0 ) {
+          LOGLN(("eAppEUI not found"));
+          appEUI = (const char*)NULL;
+          goto quit_clean;
+        }
         appEUI = line.substring(iAppEUI+10,iAppEUI+eAppEUI);
-        LOGLN((appEUI));
+        LOGF(("appEUI %s\r\n",appEUI.c_str()));
         if ( appEUI.length() != APPEUI_STR_SZ ) {
             LOGLN(("AppEUI sz invalid"));
+            appEUI = (const char*)NULL;
             goto quit_clean; 
         }
         appEUI.toUpperCase();
@@ -250,14 +268,20 @@ bool getLoRaConfig() {
         for (int i = 0 ; i < APPEUI_SZ ; i++) {
           loraConf.appeui[i] = (uint8_t)hexStrToInt(&s[2*i],2);
         }
+        appEUI = (const char*)NULL;
 
         String appKEY = line.substring(iAppKEY);
         int eAppKEY = appKEY.indexOf("\",");
-        if ( eAppKEY < 0 ) goto quit_clean;
+        if ( eAppKEY < 0 ) {
+          LOGLN(("eAppKEY not found"));
+          appKEY = (const char*)NULL;
+          goto quit_clean;
+        }
         appKEY = line.substring(iAppKEY+10,iAppKEY+eAppKEY);
-        LOGLN((appKEY));
+        LOGF(("appKEY %s\r\n",appKEY.c_str()));
         if ( appKEY.length() != APPKEY_STR_SZ ) {
             LOGLN(("AppEY sz invalid"));
+            appKEY = (const char*)NULL;
             goto quit_clean; 
         }
         appKEY.toUpperCase();
@@ -265,14 +289,34 @@ bool getLoRaConfig() {
         for (int i = 0 ; i < APPKEY_SZ ; i++) {
           loraConf.appkey[i] = (uint8_t)hexStrToInt(&s[2*i],2);
         }
+        appKEY = (const char*)NULL;
 
         // process LoRaKey
         uint32_t y = 0x63D15391;
         for ( int i = 0 ; i < APPKEY_SZ ; i++ ) {
            HIDE(loraConf.appkey[i],y,state.uid[i&0x7]);
         }
+
+        String zone = line.substring(iZone);
+        int eZone = zone.indexOf("\"}");
+        if ( eZone < 0 ) {
+          LOGLN(("eZone not found"));
+          zone = (const char*)NULL;
+          goto quit_clean;
+        }
+        zone = line.substring(iZone+8,iZone+eZone);
+        if ( zone.length() < 1 || zone.length() > 2 ) {
+            LOGLN(("Zone sz invalid"));
+            zone = (const char*)NULL;
+            goto quit_clean; 
+        }
+        int z = atoi((char *)zone.c_str());
+        LOGF(("Zone %d\r\n",z));
+        zone = (const char*)NULL;
+        loraConf.zone = z;
         
         state.isLoRaSet = true;
+        line = (const char*)NULL;
 
     } else {
         LOGLN(("Client Timeout"));
@@ -281,6 +325,7 @@ bool getLoRaConfig() {
     return true;
 
     quit_clean:
+      line = (const char*)NULL;
       client.stop();
       return false;
     

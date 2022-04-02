@@ -133,7 +133,7 @@ void runLoRaPing() {
     data[i] = state.uidi[i];
   }
   data[7] = ((state.intState << 4) & 0xF0) | (state.extState & 0x0F);
-  do_send(1, data, 8, 7, 14, false, 0);
+  do_send(1, data, 8, 7, 0, false, 0);
   
 }
 
