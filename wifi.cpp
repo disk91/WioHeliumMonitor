@@ -98,6 +98,7 @@ uint32_t hexStrToInt(char * st, int sz){
       if ( st[k] == x[i] ) {
         if ( i == 16 ) return 0;
         v += i;
+        break;
       }
     }
     if ( i == 17 ) return 0;
