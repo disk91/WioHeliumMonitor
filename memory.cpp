@@ -17,7 +17,9 @@
  *
  *  Author : Paul Pinault (disk91.com)
  */
-#include <Arduino.h> 
+#include <Arduino.h>
+#include "FreeRTOS.h"
+#include "portable.h" 
 #include "config.h"
 #include "memory.h"
 
@@ -35,14 +37,18 @@ uint32_t usedStack() {
      r = 0;
   }
   
-  LOGF(("Stack Sz %d\r\n",r));
+  LOGF(("Stack size: %d\r\n",r));
   return r;
 }
 
 uint32_t usedHeap() {
   uint32_t r = (char*)(sbrk(0)) - baseHeap;
-  LOGF(("Heap Sz %d\r\n",r));
-  return r;
+  LOGF(("Arduino heap size: %d\r\n",r));
+
+  size_t m = xPortGetFreeHeapSize();
+  LOGF(("freeRTOS heap size: %d\r\n",m));
+
+  return r+m;
 }
 
 uint32_t usedMemory() {

@@ -132,7 +132,18 @@ void erpcs_initMallocHisto() {
 }
 
 void erpc_addMalloc(void * m) {
-  if ( ptr == 128 ) return;
+  if ( ptr == 128 ) {
+    // Serial.printf("Malloc not recorded\r\n");
+    return;
+  }
+  // search for free block
+  for ( int i = 0 ; i < ptr ; i++ ) {
+    if ( allocHisto[i] == NULL ) {
+      allocHisto[i] = m;
+      return;
+    }
+  }
+  // otherwize add a new one
   allocHisto[ptr] = m;
   ptr++;
 }
@@ -182,6 +193,7 @@ void erpc_free(void *ptr)
   // ...
     vPortFree(ptr);
 }
+
 
  
   */

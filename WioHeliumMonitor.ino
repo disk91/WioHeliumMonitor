@@ -33,8 +33,6 @@
 #include "LoraCom.h"
 #include "memory.h"
 
-#include <malloc.h>
-
 state_t state;
 void setup() {
 
