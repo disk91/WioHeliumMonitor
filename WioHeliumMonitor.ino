@@ -77,6 +77,7 @@ void loop() {
   static uint32_t lTime = LORAPING_PERIOD_MS - 5000;    // for test
   static uint32_t rTime = REPORT_PERIOD_MS - 1000;      // report time
   static uint32_t sTime = 0;                            // last sound played
+  static uint32_t tTime = 0;                            // Total time
   uint32_t stTime;
 
   iAmAlive();
@@ -122,4 +123,10 @@ void loop() {
   rTime += duration;
   sTime += duration;
   lTime += duration;
+  tTime += duration;
+
+  if ( tTime > 1000 ) {
+    state.uptime += tTime / 1000;
+    tTime = (tTime % 1000);
+  }
 }

@@ -61,6 +61,9 @@ typedef struct s_state {
   bool      e5Detected;
   bool      isLoRaSet;        // true when the lora config has been retreived
   bool      isLoRaInit;       // true when lora stack has been initialized
+  bool      isLoRaConnected;  // true when joined
+
+  uint32_t  uptime;           // total uptime in second (for debug)
   
 } state_t;
 

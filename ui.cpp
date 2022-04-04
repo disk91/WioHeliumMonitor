@@ -84,8 +84,8 @@ void displayTitle() {
     tft.setFreeFont(FS9);     // Select the original small TomThumb font
     sprintf(title,"Wio Helium Monitor");
     tft.drawString(title,(320-150)/2, 85, GFXFF);  
-    sprintf(title,"Version %s (%s)", VERSION, "...");
-    tft.drawString(title,(320-180)/2, 115, GFXFF);  
+    sprintf(title,"Version %s", VERSION);
+    tft.drawString(title,(320-100)/2, 115, GFXFF);  
     //sprintf(title,"WIO_HM_%02X%02X%02X%02X%02X", loraConf.deveui[3],loraConf.deveui[4], loraConf.deveui[5], loraConf.deveui[6], loraConf.deveui[7]);
     //tft.drawString(title,(320-160)/2, 180, GFXFF);
 }
@@ -162,6 +162,59 @@ void clearScreen() {
     tft.fillScreen(TFT_BLACK);  
 }
 
+// ========================================
+// Print LoRa connection status
+// ========================================
+#define LORA_CNX_X_OFFSET 220
+#define LORA_CNX_Y_OFFSET 1
+#define LORA_CNX_X_SIZE   48
+#define LORA_CNX_Y_SIZE   16
+#define LORA_CNX_R_SIZE   5
+
+void refreshLoRaState() {
+  static int loRaState = 0;
+
+  if ( loRaState == ( state.e5Detected + state.isLoRaConnected ) ) return;
+  loRaState = ( state.e5Detected + state.isLoRaConnected );
+  
+  int color = TFT_BLACK;
+  int tcolor = TFT_BLACK;
+  if ( state.e5Detected && state.isLoRaConnected ) {
+    color = TFT_DARKGREEN;
+  } else if (state.e5Detected && !state.isLoRaConnected) {
+    color = TFT_RED;
+    tcolor = TFT_WHITE;
+  }
+  tft.fillRoundRect(LORA_CNX_X_OFFSET,LORA_CNX_Y_OFFSET,LORA_CNX_X_SIZE,LORA_CNX_Y_SIZE,LORA_CNX_R_SIZE,color);
+  tft.setFreeFont(FM9);    
+  tft.setTextColor(tcolor);
+  tft.drawString("LoRa",LORA_CNX_X_OFFSET+2,LORA_CNX_Y_OFFSET+1,GFXFF);
+}
+
+// ========================================
+// Print Uptime
+// ========================================
+#define UPTIME_X_OFFSET 250
+#define UPTIME_Y_OFFSET 34
+#define UPTIME_X_SIZE 70
+#define UPTIME_Y_SIZE 20
+
+void refreshUptime(bool force) {
+  static uint32_t lastTimeM = 0xFFFFFFFF;
+  #ifdef DEBUG
+   char str[20];
+   if ( lastTimeM != state.uptime/60 || force ) {
+     lastTimeM = state.uptime/60;
+     int h = state.uptime/3600;
+     int m = (state.uptime % 3600) / 60;
+     sprintf(str,"%03d:%02d",h,m);
+     tft.setFreeFont(FM9);    
+     tft.setTextColor(TFT_WHITE);
+     tft.fillRect(UPTIME_X_OFFSET,UPTIME_Y_OFFSET,UPTIME_X_SIZE, UPTIME_Y_SIZE, TFT_BLACK);
+     tft.drawString(str,UPTIME_X_OFFSET,UPTIME_Y_OFFSET+1,GFXFF);
+   }
+  #endif
+}
 
 // ========================================
 // Print ping history
@@ -184,7 +237,7 @@ void clearScreen() {
 #define HIST_PING_GFX_Y_SIZE  (HIST_PING_I_Y_OFFSET+HIST_PING_I_Y_SIZE+HIST_PING_EI_BREAK_SIZE+HIST_PING_ETXT_Y_SIZE+HIST_PING_E_Y_SIZE)
 
 #define ID_X_OFFSET 2
-#define ID_X_SIZE   (270-ID_X_OFFSET)
+#define ID_X_SIZE   (230-ID_X_OFFSET)
 #define ID_Y_OFFSET 2
 #define ID_Y_SIZE   20
 
@@ -432,10 +485,6 @@ void refreshUI() {
     hasAction=true;
   }
 
-  if ( hasAction || ui.screenInitialized == false ) {
-    displaySoundState();
-  }
-
 
   // refresh the graph history part
   if ( !hasAction && !QRCodeState && ( state.hasRefreshed == true || ui.screenInitialized == false ) ) {
@@ -443,9 +492,16 @@ void refreshUI() {
     state.hasRefreshed = false;
   }  
 
+  if ( hasAction || ui.screenInitialized == false ) {
+    displaySoundState();
+    refreshUptime(true);
+  } else {
+    refreshUptime(false);
+  }
   
   displayActivity();
-
+  refreshLoRaState();
+  
   // avoid re-entering
   if ( hasAction ) delay(300); 
 }

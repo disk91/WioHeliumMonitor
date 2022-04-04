@@ -36,6 +36,7 @@ loraConf_t loraConf;
    if ( state.isLoRaInit && state.isLoRaSet ) {
      if ( state.e5Detected ) {
        loraLoopE5();
+       state.isLoRaConnected = isLoRaE5Connected();
      }
    }
  }

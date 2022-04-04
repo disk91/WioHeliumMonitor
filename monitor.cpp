@@ -77,6 +77,8 @@
   state.e5Detected = false;
   state.isRegistered = false;
   state.isLoRaInit = false;
+  state.isLoRaConnected = false;
+  state.uptime = 0;
 }
 
 // ---

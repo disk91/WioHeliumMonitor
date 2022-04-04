@@ -730,6 +730,12 @@ void loraLoopE5() {
    }
 }
 
+boolean isLoRaE5Connected() {
+
+  return ( loraContext.cState >= JOINED );
+  
+}
+
 boolean canLoraSleep(void) {
   
   return !loraContext.runningCommand;

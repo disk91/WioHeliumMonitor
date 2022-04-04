@@ -33,6 +33,7 @@ bool loraE5Setup();
 bool loraE5QuickSetup();
 void do_sendE5(uint8_t port, uint8_t * data, uint8_t sz, uint8_t _dr, uint8_t pwr, bool acked, uint8_t retries );
 void loraLoopE5();
+boolean isLoRaE5Connected();
 
 #define DEVEUI_STR_SZ 16
 #define APPEUI_STR_SZ 16
