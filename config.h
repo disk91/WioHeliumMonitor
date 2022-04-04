@@ -21,7 +21,7 @@
 #define __CONFIG_H
 
 // 1 - select if you want some debug
-#define DEBUG
+//#define DEBUG
 //#define DEBUGLORA
 //#define DEBUGDATA
 
