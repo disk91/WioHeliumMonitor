@@ -83,5 +83,4 @@ bool storeConfigToBackup();
 bool readConfigFromBackup();
 void clearBackup();
 
-
 #endif // __CONFIG_H

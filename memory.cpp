@@ -62,3 +62,19 @@ void memoryTraceInit() {
   baseStack -= 8; // overhaed related to this function call
   baseHeap = (char*)(sbrk(0));
 }
+
+uint32_t getSamd51Uid() {
+  uint32_t pdwUniqueID[4];
+  pdwUniqueID[0] = SERIAL_NUMBER_WORD_0;
+  pdwUniqueID[1] = SERIAL_NUMBER_WORD_1;
+  pdwUniqueID[2] = SERIAL_NUMBER_WORD_2;
+  pdwUniqueID[3] = SERIAL_NUMBER_WORD_3;
+
+  LOGF(("SN : %08X %08X %08X %08X\r\n",pdwUniqueID[0], pdwUniqueID[1], pdwUniqueID[2], pdwUniqueID[3]));
+  uint32_t r = 0;
+  for ( int i = 0 ; i < 4 ; i++) {
+    r += pdwUniqueID[i];
+  }
+  LOGF(("SN : 0x%08X\r\n",r));
+  return r;
+}

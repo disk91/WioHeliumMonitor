@@ -25,6 +25,7 @@
 #include "wifiHide.h"
 #include "ui.h"
 #include "loraCom.h"
+#include "memory.h"
 
 IPAddress srv((uint32_t)0); // server IP
 
@@ -46,12 +47,16 @@ void setupWifi() {
  byte mac[6];
  WiFi.macAddress(mac);
  uint8_t check = 0;
- for ( int i = 0 ; i < 6 ; i++ ) {
+ uint32_t boardId = getSamd51Uid();
+ state.uidi[0] = (boardId >> 24) & 0xFF;
+ state.uidi[1] = (boardId      ) & 0xFF;
+ check = state.uidi[0] + state.uidi[1];
+ for ( int i = 2 ; i < 6 ; i++ ) {
   check += (uint8_t)mac[i];
   state.uidi[i] = mac[i];
  }
- state.uid[6] = check;
- sprintf((char*)state.uid,"%02X%02X%02X%02X%02X%02X%02X",mac[0],mac[1],mac[2],mac[3],mac[4],mac[5],check);
+ state.uidi[6] = check;
+ sprintf((char*)state.uid,"%02X%02X%02X%02X%02X%02X%02X",state.uidi[0],state.uidi[1],state.uidi[2],state.uidi[3],state.uidi[4],state.uidi[5],state.uidi[6]);
  LOGF(("UID : %s\r\n",(char*)state.uid));
 
  if( !WiFi.hostByName("wiomonitor.disk91.com", srv) ){
@@ -108,7 +113,7 @@ uint32_t hexStrToInt(char * st, int sz){
 
 
 bool reportWatchium() {
-   
+   bool ret = false;
    WiFiClient client;
 //   if (client.connect("10.0.0.247", 80, 900) == 0) { // failure test
    if (!client.connect(srv, 80, 1000)) {
@@ -174,11 +179,12 @@ bool reportWatchium() {
           status = (const char*)NULL;
         }              
         line = (const char*)NULL;
+        ret = true;
     } else {
         LOGLN(("Client Timeout"));
     }
     client.stop();
-    return true;
+    return ret;
 }
 
 
@@ -237,7 +243,7 @@ bool getLoRaConfig() {
           goto quit_clean;
         }
         devEUI = line.substring(iDevEUI+10,iDevEUI+eDevEUI);
-        LOGF(("devEUI %s\r\n",devEUI.c_str()));
+        LOGF(("devEUI: %s\r\n",devEUI.c_str()));
         if ( devEUI.length() != DEVEUI_STR_SZ ) {
             LOGLN(("DevEUI sz invalid"));
             devEUI = (const char*)NULL;
@@ -258,7 +264,7 @@ bool getLoRaConfig() {
           goto quit_clean;
         }
         appEUI = line.substring(iAppEUI+10,iAppEUI+eAppEUI);
-        LOGF(("appEUI %s\r\n",appEUI.c_str()));
+        LOGF(("appEUI: %s\r\n",appEUI.c_str()));
         if ( appEUI.length() != APPEUI_STR_SZ ) {
             LOGLN(("AppEUI sz invalid"));
             appEUI = (const char*)NULL;
@@ -279,9 +285,9 @@ bool getLoRaConfig() {
           goto quit_clean;
         }
         appKEY = line.substring(iAppKEY+10,iAppKEY+eAppKEY);
-        LOGF(("appKEY %s\r\n",appKEY.c_str()));
+        LOGF(("appKEY: %s\r\n",appKEY.c_str()));
         if ( appKEY.length() != APPKEY_STR_SZ ) {
-            LOGLN(("AppEY sz invalid"));
+            LOGLN(("appKEY sz invalid"));
             appKEY = (const char*)NULL;
             goto quit_clean; 
         }
@@ -293,10 +299,13 @@ bool getLoRaConfig() {
         appKEY = (const char*)NULL;
 
         // process LoRaKey
-        uint32_t y = 0x63D15391;
+        LOG(("appKEY: "));
+        uint32_t k = 0x63D15391;
         for ( int i = 0 ; i < APPKEY_SZ ; i++ ) {
-           HIDE(loraConf.appkey[i],y,state.uid[i&0x7]);
+           HIDE(loraConf.appkey[i],k,state.uidi[i%7]);
+           LOGF(("%02X",loraConf.appkey[i]));
         }
+        LOGLN((""));
 
         String zone = line.substring(iZone);
         int eZone = zone.indexOf("\"}");

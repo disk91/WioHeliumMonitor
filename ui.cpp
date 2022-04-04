@@ -269,7 +269,6 @@ void refreshPing() {
     tft.drawRoundRect(HIST_PING_X_OFFSET,HIST_PING_I_Y_OFFSET,HIST_PING_X_SIZE,HIST_PING_I_Y_SIZE,R_SIZE,TFT_WHITE);
     tft.drawString("External ping",HIST_PING_X_OFFSET,HIST_PING_ETXT_Y_OFFSET,GFXFF);
     tft.drawRoundRect(HIST_PING_X_OFFSET,HIST_PING_E_Y_OFFSET,HIST_PING_X_SIZE,HIST_PING_E_Y_SIZE,R_SIZE,TFT_WHITE);
-    ui.screenInitialized = true;
   }
 
   // Hs name
@@ -492,16 +491,17 @@ void refreshUI() {
     state.hasRefreshed = false;
   }  
 
+  displayActivity();
+  refreshLoRaState();
+
   if ( hasAction || ui.screenInitialized == false ) {
     displaySoundState();
     refreshUptime(true);
   } else {
     refreshUptime(false);
   }
-  
-  displayActivity();
-  refreshLoRaState();
-  
+
+  ui.screenInitialized = true;
   // avoid re-entering
   if ( hasAction ) delay(300); 
 }

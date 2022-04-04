@@ -20,9 +20,15 @@
  #ifndef __MEMORY_H__
  #define __MEMORY_H__
 
+#define SERIAL_NUMBER_WORD_0 *(volatile uint32_t *)(0x008061FC)
+#define SERIAL_NUMBER_WORD_1 *(volatile uint32_t *)(0x00806010)
+#define SERIAL_NUMBER_WORD_2 *(volatile uint32_t *)(0x00806014)
+#define SERIAL_NUMBER_WORD_3 *(volatile uint32_t *)(0x00806018)
+
 void memoryTraceInit();
 uint32_t usedHeap();
 uint32_t usedStack();
 uint32_t usedMemory();
+uint32_t getSamd51Uid();
 
  #endif
