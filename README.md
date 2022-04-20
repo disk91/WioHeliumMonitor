@@ -16,8 +16,7 @@ All the Watchium User can use the WiFi information report. Watchium Silver & Gol
 See the setup process above.
 
 ## Coming soon
-- report the information over LoRa (using the network redundancy when the LAN is not available)
-- store configuration in an external flash
+- store WiFi configuration in an external flash for seamless upgrade
 
 ## Requirements
 The project uses a WIO Terminal you need to make some specific stuffs:
