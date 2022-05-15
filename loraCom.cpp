@@ -21,15 +21,17 @@
  #include "loraCom.h"
  #include "state.h"
 
+
 loraConf_t loraConf;
 
  void loraSetup() {
-    if ( loraE5QuickSetup() ) {
-      state.e5Detected = true;
-      LOGLN(("LoRa E5 detected"));
-    } else {
-      state.e5Detected = false;     
-    } 
+    state.e5Detected = false;     
+    if ( detectLoRaE5SerialPort() ) {
+      if ( loraE5QuickSetup() ) {
+        state.e5Detected = true;
+        LOGLN(("LoRa E5 detected"));
+      }
+    }
  }
 
  void loraLoop() {

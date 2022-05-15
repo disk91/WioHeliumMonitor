@@ -20,12 +20,23 @@
 #include <Arduino.h>
 #include "config.h"
 #include "loraCom.h"
+#include "SoftwareSerial.h"
+
+// Manage soft serial lines
+#define SS1_RX BCM3   //BCM3 - TX on LoRa side
+#define SS1_TX BCM2   //BCM2 - Rx on LoRa side
+#define SS2_RX BCM27  //BCM27 - TX on LoRa side
+#define SS2_TX BCM22  //BCM22 - Rx on LoRa side
 
 #define DEFAULT_TIMEOUT 2000
 #define PASSTHROUGH_TIMEOUT 15000
 #define JOIN_TIMEOUT 12000
 #define SEND_TIMEOUT_BASE 5000
 #define MAX_RESP_BUF_SZ  64
+
+enum Serials { HARDWARE, SOFT1, SOFT2 };
+SoftwareSerial SSerial2(SS2_RX,SS2_TX);
+SoftwareSerial SSerial1(SS1_RX,SS1_TX);
 
 typedef struct {
   char bufOkResp[MAX_RESP_BUF_SZ];
@@ -54,6 +65,8 @@ typedef struct {
   float lastSnr;
   uint8_t tmpInt8;
   e_state cState;   // Current State (Joined / NotJoined)
+  enum Serials _serial;
+  
 } loraE5_t;
 loraE5_t loraContext;
 
@@ -86,8 +99,19 @@ bool sendATCommand(const char * cmd, const char * okResp, const char * errResp, 
   }
   loraContext.respIndex = 0;
   loraContext.lineProcessing = lineProcessing;
+
+  switch ( loraContext._serial )  {
+    case HARDWARE: 
+      SERIALE5.printf("%s\r\n",cmd);
+      break;
+    case SOFT1:
+      SSerial1.printf("%s\r\n",cmd);
+      break;
+    case SOFT2:
+      SSerial2.printf("%s\r\n",cmd);
+      break;
+  }  
   
-  SERIALE5.printf("%s\r\n",cmd);
   LOGLORALN((cmd));
   bool done = false;
   if ( !async ) {
@@ -156,8 +180,22 @@ bool processATResponse() {
     return true;
   }
   // process serial line response
-  while ( SERIALE5.available() > 0 ) {
-      char c = SERIALE5.read();
+  while ( (loraContext._serial == HARDWARE && SERIALE5.available() > 0)
+       || (loraContext._serial == SOFT1 && SSerial1.available() > 0)
+       || (loraContext._serial == SOFT2 && SSerial2.available() > 0)
+  ) {
+      char c;
+      switch ( loraContext._serial )  {
+        case HARDWARE: 
+          c = SERIALE5.read();
+          break;
+        case SOFT1:
+          c = SSerial1.read();
+          break;
+        case SOFT2:
+          c = SSerial2.read();
+          break;
+      }  
       if ( (c == '\0' || c == '\r' || c == '\n' ) ) {
         if ( loraContext.respIndex > 0 ) {
           // process line response
@@ -215,14 +253,26 @@ bool processATResponse() {
 bool loraE5Setup() {
   char _cmd[128];
   
-  SERIALE5.begin(9600);
   uint32_t start = millis();
-  while(!SERIALE5 && ((millis() - start) < 2000));
-  if ( (millis() - start) >= 2000 ) {
+  switch ( loraContext._serial )  {
+    case HARDWARE: 
+      SERIALE5.begin(9600);
+      while ( !SERIALE5 && (millis() - start) < 1000 );
+      break;
+    case SOFT1:
+      SSerial1.begin(9600);
+      while ( !SSerial1 && (millis() - start) < 1000 );
+      break;
+    case SOFT2:
+      SSerial2.begin(9600);
+      while ( !SSerial2 && (millis() - start) < 1000 );
+      break;
+  }  
+  if ( (millis() - start) >= 1000 ) {
     LOGLN(("Failed to connect to E5"));
     return false;
   }
-  
+    
   loraContext.runningCommand = false;
   loraContext.hasJoined = false;
   loraContext.isJoining = false;
@@ -762,10 +812,22 @@ uint32_t nextPossibleSendMs(){
 
 
 bool loraE5QuickSetup() {
-  SERIALE5.begin(9600);
   uint32_t start = millis();
-  while ( !SERIALE5 && (millis() - start) < 2000 );
-  if ( (millis() - start) >= 2000 ) return false;
+  switch ( loraContext._serial )  {
+    case HARDWARE: 
+      SERIALE5.begin(9600);
+      while ( !SERIALE5 && (millis() - start) < 1000 );
+      break;
+    case SOFT1:
+      SSerial1.begin(9600);
+      while ( !SSerial1 && (millis() - start) < 1000 );
+      break;
+    case SOFT2:
+      SSerial2.begin(9600);
+      while ( !SSerial2 && (millis() - start) < 1000 );
+      break;
+  }  
+  if ( (millis() - start) >= 1000 ) return false;
   loraContext.runningCommand = false;
   if ( ! sendATCommand("AT","+AT: OK","","",DEFAULT_TIMEOUT,false, NULL) ) {
     // retry
@@ -807,4 +869,31 @@ bool readOneByte(uint8_t adr, uint8_t * v) {
       return true;          
     }
     return false;
+}
+
+
+bool detectLoRaE5SerialPort() {
+  loraContext._serial = HARDWARE;
+  if ( loraE5QuickSetup() ) {
+    LOGLN(("LoRa-E5 found on HW-Serial"));
+    return true;
+  }
+
+  loraContext._serial = SOFT1;
+  if ( loraE5QuickSetup() ) {
+    LOGLN(("LoRa-E5 found on SS-Serial1"));
+    SSerial1.end();
+    return true;
+  }
+
+  loraContext._serial = SOFT2;
+  if ( loraE5QuickSetup() ) {
+    LOGLN(("LoRa-E5 found on SS-Serial2"));
+    SSerial2.end();
+    return true;
+  }
+
+  loraContext._serial = HARDWARE;
+  return false;
+  
 }

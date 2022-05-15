@@ -44,6 +44,7 @@ void setup() {
      LOGLN((""));
      LOGLN(("####################################################"));
   #endif
+  
   initScreen();
   displayTitle();
   delay(1000);
@@ -56,6 +57,7 @@ void setup() {
   initState();
   displaySplash();
   setupWifi();
+  connectingLoRa();
   loraSetup();
   clearScreen();
 

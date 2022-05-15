@@ -157,6 +157,13 @@ void connectingWifi() {
     step = (step+1) & 0x3;
 }
 
+// Animate WiFi connection on screen
+void connectingLoRa() {
+    tft.setTextColor(TFT_GRAY);
+    tft.setFreeFont(FS9);     // Select the original small TomThumb font
+    tft.fillRect(0,215,320,15,TFT_BLACK);
+    tft.drawString("Searching LoRa",(320-180)/2,215, GFXFF);        
+}
 
 void clearScreen() {
     tft.fillScreen(TFT_BLACK);  

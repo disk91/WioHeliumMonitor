@@ -21,7 +21,7 @@
 #define __CONFIG_H
 
 // 1 - select if you want some debug
-//#define DEBUG
+#define DEBUG
 //#define DEBUGLORA
 //#define DEBUGDATA
 
@@ -50,12 +50,12 @@
 //#define JUSTCLEAN
 
 
-#define VERSION "0.1b"
+#define VERSION "1.0b"
 
 #ifdef DEBUG
-  #define LOGLN(x)  Serial.println x
-  #define LOG(x) Serial.print x
-  #define LOGF(x) Serial.printf x
+  #define LOGLN(x) Serial.println x
+  #define LOG(x)   Serial.print x
+  #define LOGF(x)  Serial.printf x
 #else
   #define LOGLN(x) 
   #define LOG(x)
@@ -63,9 +63,9 @@
 #endif
 
 #ifdef DEBUGLORA
-  #define LOGLORALN(x)  Serial.println x
-  #define LOGLORA(x) Serial.print x
-  #define LOGLORAF(x) Serial.printf x
+  #define LOGLORALN(x) Serial.println x
+  #define LOGLORA(x)   Serial.print x
+  #define LOGLORAF(x)  Serial.printf x
 #else
   #define LOGLORALN(x) 
   #define LOGLORA(x)
