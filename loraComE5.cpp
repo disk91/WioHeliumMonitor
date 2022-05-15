@@ -237,12 +237,14 @@ bool processATResponse() {
         }
         loraContext.respIndex = 0;
       } else {
-        if ( loraContext.respIndex < 2*MAX_RESP_BUF_SZ ) {
-          loraContext.bufResponse[loraContext.respIndex] = c;
-          loraContext.respIndex++;    
-        } else {
-          LOGLN(("Response size overflow"));
-          loraContext.respIndex = 0;
+        if ( c >=32 && c <=127 ) {
+          if ( loraContext.respIndex < 2*MAX_RESP_BUF_SZ ) {
+            loraContext.bufResponse[loraContext.respIndex] = c;
+            loraContext.respIndex++;    
+          } else {
+            LOGLN(("Response size overflow"));
+            loraContext.respIndex = 0;
+          }
         }
       }
   }
@@ -260,10 +262,12 @@ bool loraE5Setup() {
       while ( !SERIALE5 && (millis() - start) < 1000 );
       break;
     case SOFT1:
+      SSerial1.end();
       SSerial1.begin(9600);
       while ( !SSerial1 && (millis() - start) < 1000 );
       break;
     case SOFT2:
+      SSerial2.end();
       SSerial2.begin(9600);
       while ( !SSerial2 && (millis() - start) < 1000 );
       break;

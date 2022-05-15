@@ -90,25 +90,50 @@ void displayTitle() {
     //tft.drawString(title,(320-160)/2, 180, GFXFF);
 }
 
+
+void displaySetupQRCode() {
+
+    QRCode qrcode;
+    uint8_t qrcodeData[qrcode_getBufferSize(3)];
+    qrcode_initText(&qrcode, qrcodeData, 3, 0, "http://192.168.1.1/");
+  
+    int sz = 20+qrcode.size*3;
+    int xs =  260 - sz / 2;
+    int ys =  130 - sz / 2;
+    
+    tft.fillRect(xs,ys,sz,sz,TFT_BLACK);
+    for (uint8_t y = 0; y < qrcode.size; y++) {
+      for (uint8_t x = 0; x < qrcode.size; x++) {
+        if ( qrcode_getModule(&qrcode, x, y) ) {
+          tft.fillRect(10+xs+(3*x),10+ys+(3*y),3,3,TFT_WHITE);
+        } else {
+          tft.fillRect(10+xs+(3*x),10+ys+(3*y),3,3,TFT_BLACK);
+        }
+      }
+    }
+}
+
 void displaySetup() {
     char title[128];
     tft.fillScreen(TFT_BLACK);
     tft.setTextColor(TFT_GRAY);
     tft.setFreeFont(FS9);     // Select the original small TomThumb font
-    sprintf(title,"Wio Helium Monitor");
-    tft.drawString(title,(320-150)/2, 20, GFXFF);  
+    sprintf(title,"Wio Helium Monitor Setup");
+    tft.drawString(title,(320-200)/2, 20, GFXFF);  
     
-    tft.drawRoundRect(5,75,310,110,10,TFT_WHITE);
-    sprintf(title,"To setup: connect your smartphone");
+    tft.drawRoundRect(5,75,200,110,10,TFT_WHITE);
+    sprintf(title,"Connect your smartphone");
     tft.drawString(title,10, 80, GFXFF);  
-    sprintf(title,"on WioHeliumMonitor WiFi");
+    sprintf(title,"on WioHeliumMonitor");
     tft.drawString(title,10, 100, GFXFF);  
-    sprintf(title,"then browser 192.168.1.1");
+    sprintf(title,"WiFi, then browse");
     tft.drawString(title,10, 120, GFXFF);  
-    sprintf(title,"select your WiFi network");
+    sprintf(title,"192.168.1.1 or QR=>");
     tft.drawString(title,10, 140, GFXFF);  
-    sprintf(title,"enter password and Submit");
+    sprintf(title,"Then complete form");
     tft.drawString(title,10, 160, GFXFF);  
+
+    displaySetupQRCode();
 }
 
 void displaySplash() {
@@ -161,8 +186,8 @@ void connectingWifi() {
 void connectingLoRa() {
     tft.setTextColor(TFT_GRAY);
     tft.setFreeFont(FS9);     // Select the original small TomThumb font
-    tft.fillRect(0,215,320,15,TFT_BLACK);
-    tft.drawString("Searching LoRa",(320-180)/2,215, GFXFF);        
+    tft.fillRect(0,215,320,18,TFT_BLACK);
+    tft.drawString("Searching LoRa",(320-120)/2,215, GFXFF);        
 }
 
 void clearScreen() {
@@ -244,7 +269,7 @@ void refreshUptime(bool force) {
 #define HIST_PING_GFX_Y_SIZE  (HIST_PING_I_Y_OFFSET+HIST_PING_I_Y_SIZE+HIST_PING_EI_BREAK_SIZE+HIST_PING_ETXT_Y_SIZE+HIST_PING_E_Y_SIZE)
 
 #define ID_X_OFFSET 2
-#define ID_X_SIZE   (230-ID_X_OFFSET)
+#define ID_X_SIZE   (220-ID_X_OFFSET)
 #define ID_Y_OFFSET 2
 #define ID_Y_SIZE   20
 
@@ -383,7 +408,6 @@ void displayQRCode() {
     int ys =  120 - sz / 2;
     
     tft.fillRect(xs,ys,sz,sz,TFT_BLACK);
-    Serial.println(qrcode.size);
     for (uint8_t y = 0; y < qrcode.size; y++) {
       for (uint8_t x = 0; x < qrcode.size; x++) {
         if ( qrcode_getModule(&qrcode, x, y) ) {
@@ -473,7 +497,7 @@ void refreshUI() {
     hasAction=true;
   } else if (digitalRead(WIO_KEY_A) == LOW) {
     displayQRCode();  
-    hasAction=true;
+    delay(300); 
   } else if (digitalRead(WIO_5S_UP) == LOW) {
 
     hasAction=true;
@@ -490,7 +514,6 @@ void refreshUI() {
 
     hasAction=true;
   }
-
 
   // refresh the graph history part
   if ( !hasAction && !QRCodeState && ( state.hasRefreshed == true || ui.screenInitialized == false ) ) {

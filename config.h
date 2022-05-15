@@ -21,7 +21,7 @@
 #define __CONFIG_H
 
 // 1 - select if you want some debug
-#define DEBUG
+//#define DEBUG
 //#define DEBUGLORA
 //#define DEBUGDATA
 
@@ -50,7 +50,7 @@
 //#define JUSTCLEAN
 
 
-#define VERSION "1.0b"
+#define VERSION "1.0"
 
 #ifdef DEBUG
   #define LOGLN(x) Serial.println x
