@@ -18,6 +18,7 @@ See the setup process above.
 ## Requirements
 The project uses a WIO Terminal you need to make some specific stuffs:
 - Upgrade the WiFi firmware folowing the [Seeed documentation](https://wiki.seeedstudio.com/Wio-Terminal-Network-Overview/)
+
 It can be use without a LoRa-E5 board, in this case, only the WiFi verification will be possible. To verify the LoRaWan communication, you need one of the following options:
 - LoRa-E5 chassis from Seeedstudio
 - Grove-E5 from Seeedstudio (connected on one of the two connectors)
